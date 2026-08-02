@@ -16,38 +16,37 @@
 
 ## 설치
 
-Windows에서 처음 한 번:
-```bash
-setup.bat 더블클릭
-```
-그 다음부터는:
-```bash
-run.bat 더블클릭
-```
-가상환경(venv)을 자동으로 만들고 `requirements.txt`를 설치해줍니다. 개발자들이
-보통 그렇게 하듯, 이 프로젝트도 전역 파이썬을 건드리지 않고 독립된 가상환경에
-패키지를 설치합니다.
+**딱 이 두 가지만 하면 됩니다.**
 
-Mac/Linux는 `setup.sh` / `run.sh` (최초 1회 `chmod +x setup.sh run.sh` 필요).
+1. `setup.bat` 더블클릭 (최초 1회)
+2. `run.bat` 더블클릭 (그다음부터 실행할 때마다)
 
-수동으로 하고 싶다면:
-```bash
-python -m venv venv
-venv\Scripts\activate      # Mac/Linux는 source venv/bin/activate
-pip install -r requirements.txt
-```
-(`pdfplumber`는 필수, `tkinterdnd2`는 데스크탑 앱의 드래그&드롭 기능에 필요,
-`pytesseract`는 스캔본 PDF 처리에 필요 — 없어도 각 기능만 빠질 뿐 나머지는 동작합니다.)
+이게 끝입니다. 가상환경 생성, 패키지 설치 다 `setup.bat`이 알아서 처리합니다.
 
-Windows/Mac 표준 Python 설치본에는 `tkinter`가 기본 포함되어 있어 따로 설치할
-필요가 없습니다. (Linux에서 `ModuleNotFoundError: No module named 'tkinter'`가
-뜨면 `sudo apt install python3-tk`)
+<details>
+<summary>+@ 참고사항 (몰라도 정상적으로 동작합니다)</summary>
 
-스캔본(이미지) PDF까지 처리하려면 시스템에 OCR 엔진도 필요합니다.
-```bash
-# Ubuntu/Debian 예시. Windows는 tesseract 공식 설치 프로그램 사용.
-sudo apt-get install tesseract-ocr tesseract-ocr-kor poppler-utils
-```
+- 개발자들이 보통 그렇게 하듯, 이 프로젝트도 전역 파이썬을 건드리지 않고
+  독립된 가상환경(venv)에 패키지를 설치합니다.
+- Mac/Linux는 `setup.sh` / `run.sh` (최초 1회 `chmod +x setup.sh run.sh` 필요).
+- 수동으로 하고 싶다면:
+  ```bash
+  python -m venv venv
+  venv\Scripts\activate      # Mac/Linux는 source venv/bin/activate
+  pip install -r requirements.txt
+  ```
+  (`pdfplumber`는 필수, `tkinterdnd2`는 데스크탑 앱의 드래그&드롭 기능에 필요,
+  `pytesseract`는 스캔본 PDF 처리에 필요 — 없어도 각 기능만 빠질 뿐 나머지는 동작합니다.)
+- Windows/Mac 표준 Python 설치본에는 `tkinter`가 기본 포함되어 있어 따로 설치할
+  필요가 없습니다. (Linux에서 `ModuleNotFoundError: No module named 'tkinter'`가
+  뜨면 `sudo apt install python3-tk`)
+- 스캔본(이미지) PDF까지 처리하려면 시스템에 OCR 엔진도 필요합니다.
+  ```bash
+  # Ubuntu/Debian 예시. Windows는 tesseract 공식 설치 프로그램 사용.
+  sudo apt-get install tesseract-ocr tesseract-ocr-kor poppler-utils
+  ```
+
+</details>
 
 ## 사용법 — 데스크탑 앱 (`app.py`)
 
