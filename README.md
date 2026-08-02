@@ -84,6 +84,11 @@ release/
 따로 설치할 필요가 없습니다. (`company_aliases.json`은 exe 옆에 그대로 있는
 평범한 텍스트 파일이라, 각자 PC에서 자유롭게 열어 수정할 수 있습니다.)
 
+압축할 때는 탐색기에서 `release` 폴더 우클릭 → "보내기 → 압축(ZIP) 폴더"
+(또는 PowerShell `Compress-Archive`)처럼 표준 zip 도구를 쓰세요. 다른 압축
+도구는 파일이 많고 큰 배치(tesseract dll 수십 개 포함)에서 간혹 손상된 zip을
+만들 수 있습니다.
+
 코드를 고친 뒤에는 `build_release.bat`을 다시 실행하면 `release` 폴더가
 최신 상태로 갱신됩니다.
 
