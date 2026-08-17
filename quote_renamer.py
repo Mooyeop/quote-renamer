@@ -28,9 +28,14 @@ def get_app_dir() -> Path:
 
 
 ALIASES_PATH = get_app_dir() / "company_aliases.json"
+LOCAL_ALIASES_PATH = get_app_dir() / "company_aliases.local.json"
 
 
 def load_aliases() -> dict:
+    # company_aliases.local.json은 git에 올라가지 않는 실제 거래처 매핑 파일 -
+    # 존재하면 이걸 우선 사용한다 (공개 저장소의 company_aliases.json은 예시일 뿐).
+    if LOCAL_ALIASES_PATH.exists():
+        return json.loads(LOCAL_ALIASES_PATH.read_text(encoding="utf-8"))
     if ALIASES_PATH.exists():
         return json.loads(ALIASES_PATH.read_text(encoding="utf-8"))
     return {}

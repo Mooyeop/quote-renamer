@@ -26,7 +26,14 @@ if not exist release mkdir release
 if not exist release\tesseract\tessdata mkdir release\tesseract\tessdata
 
 copy /Y "dist\견적서리네이머.exe" release\ >nul
-copy /Y company_aliases.json release\ >nul
+
+if exist company_aliases.local.json (
+    echo company_aliases.local.json 발견 - 실제 거래처 매핑을 배포판에 담습니다.
+    copy /Y company_aliases.local.json "release\company_aliases.json" >nul
+) else (
+    echo company_aliases.local.json 이 없어 예시용 company_aliases.json 을 담습니다.
+    copy /Y company_aliases.json release\ >nul
+)
 
 set TESS_DIR=C:\Program Files\Tesseract-OCR
 if not exist "%TESS_DIR%\tesseract.exe" (

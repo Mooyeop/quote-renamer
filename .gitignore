@@ -6,3 +6,4 @@ release/
 *.pyc
 .claude/
 *.zip
+company_aliases.local.json
