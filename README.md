@@ -1,9 +1,13 @@
 # 견적서 PDF 자동 리네이밍 도구
 
+[![Download latest release](https://img.shields.io/github/v/release/Mooyeop/quote-renamer?label=%E2%AC%87%EF%B8%8F%20Download&style=for-the-badge&color=4f46e5)](https://github.com/Mooyeop/quote-renamer/releases/latest)
+
 > **그냥 쓰기만 하실 거라면 (일반 사용자)**
 > 아래 설치 방법은 개발자용입니다. Python 설치 없이 바로 쓰려면
-> **[여기서 exe 다운로드](https://github.com/Mooyeop/quote-renamer/releases/latest)**
+> 위 **Download** 배지를 누르거나 **[여기서 exe 다운로드](https://github.com/Mooyeop/quote-renamer/releases/latest)**
 > 하셔서 압축 풀고 `견적서리네이머.exe`를 더블클릭하세요. 이게 끝입니다.
+>
+> [이전 버전들은 여기서](https://github.com/Mooyeop/quote-renamer/releases) — 버전별로 계속 남아있으니 필요하면 옛날 버전도 받을 수 있습니다.
 
 견적서 PDF를 읽어서 아래 규칙으로 파일명을 제안/변경합니다.
 
