@@ -1,10 +1,10 @@
-; 견적서/거래명세서/세금계산서 PDF 리네이머 - Windows 설치 프로그램
+; QuoteRenamer (견적서/거래명세서/세금계산서 PDF 리네이머) - Windows 설치 프로그램
 ; 관리자 권한 없이 현재 사용자 계정에만 설치됩니다 (회사 PC 정책 때문에
 ; 관리자 권한이 없는 사람도 설치할 수 있어야 해서).
 
-#define MyAppName "견적서리네이머"
-#define MyAppVersion "1.1.0"
-#define MyAppExeName "견적서리네이머.exe"
+#define MyAppName "QuoteRenamer"
+#define MyAppVersion "1.2.0"
+#define MyAppExeName "QuoteRenamer.exe"
 
 [Setup]
 AppId={{7633398E-B6DC-48F6-9A74-68AF6735E35A}
@@ -15,7 +15,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=installer_output
-OutputBaseFilename=견적서리네이머_설치
+OutputBaseFilename=QuoteRenamer_Setup
 SetupIconFile=icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2

@@ -15,7 +15,7 @@ if errorlevel 1 (
 
 echo.
 echo === exe 빌드 중 (몇 분 걸릴 수 있음) ===
-pyinstaller --onefile --windowed --icon icon.ico --name "견적서리네이머" --distpath dist --workpath build --specpath . app.py
+pyinstaller --onefile --windowed --icon icon.ico --add-data "icon.ico;." --name "QuoteRenamer" --distpath dist --workpath build --specpath . app.py
 if errorlevel 1 (
     echo [오류] 빌드 실패
     pause
@@ -25,7 +25,7 @@ if errorlevel 1 (
 if not exist release mkdir release
 if not exist release\tesseract\tessdata mkdir release\tesseract\tessdata
 
-copy /Y "dist\견적서리네이머.exe" release\ >nul
+copy /Y "dist\QuoteRenamer.exe" release\ >nul
 
 if exist company_aliases.local.json (
     echo company_aliases.local.json 발견 - 실제 거래처 매핑을 배포판에 담습니다.

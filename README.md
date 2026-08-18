@@ -1,11 +1,11 @@
-# 견적서 PDF 자동 리네이밍 도구
+# QuoteRenamer — 견적서 PDF 자동 리네이밍 도구
 
 [![Download latest release](https://img.shields.io/github/v/release/Mooyeop/quote-renamer?label=%E2%AC%87%EF%B8%8F%20Download&style=for-the-badge&color=4f46e5)](https://github.com/Mooyeop/quote-renamer/releases/latest)
 
 > **그냥 쓰기만 하실 거라면 (일반 사용자)**
 > 아래 설치 방법은 개발자용입니다. Python 설치 없이 바로 쓰려면
 > 위 **Download** 배지를 누르거나 **[여기서 설치 파일 다운로드](https://github.com/Mooyeop/quote-renamer/releases/latest)**
-> 하셔서 `견적서리네이머_설치.exe`를 실행하세요. 관리자 권한 없이 설치되고,
+> 하셔서 `QuoteRenamer_Setup.exe`를 실행하세요. 관리자 권한 없이 설치되고,
 > 바탕화면/시작메뉴에 아이콘이 생겨서 다른 Windows 앱처럼 바로 실행할 수 있습니다.
 >
 > [이전 버전들은 여기서](https://github.com/Mooyeop/quote-renamer/releases) — 버전별로 계속 남아있으니 필요하면 옛날 버전도 받을 수 있습니다.
@@ -84,7 +84,7 @@ python app.py
 있어야 합니다 — 설치 안내는 위 "스캔본 처리" 항목 참고.)
 
 **2단계 — `build_installer.bat`** 더블클릭 한 번으로, `release/` 폴더를
-정식 Windows 설치 프로그램(`installer_output/견적서리네이머_설치.exe`)으로
+정식 Windows 설치 프로그램(`installer_output/QuoteRenamer_Setup.exe`)으로
 묶어줍니다. ([Inno Setup](https://jrsoftware.org/isdl.php) 필요 — 처음
 한 번만 설치하면 됨)
 

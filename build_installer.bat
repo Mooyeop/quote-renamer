@@ -1,5 +1,5 @@
 @echo off
-if not exist release\견적서리네이머.exe (
+if not exist release\QuoteRenamer.exe (
     echo 먼저 build_release.bat 을 실행해서 release 폴더부터 준비해주세요.
     pause
     exit /b 1
@@ -25,6 +25,6 @@ if errorlevel 1 (
 
 echo.
 echo === 완료! ===
-echo installer_output\견적서리네이머_설치.exe 를 나눠주면, 받는 사람은 실행만 하면
+echo installer_output\QuoteRenamer_Setup.exe 를 나눠주면, 받는 사람은 실행만 하면
 echo 관리자 권한 없이 설치되고 바탕화면/시작메뉴에 바로가기가 자동으로 생깁니다.
 pause

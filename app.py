@@ -1,5 +1,5 @@
 """
-견적서/거래명세서/세금계산서 PDF 리네이머 - 데스크탑 앱
+QuoteRenamer - 견적서/거래명세서/세금계산서 PDF 리네이머 데스크탑 앱
 ==================================
 PDF를 창에 끌어다 놓으면(또는 선택하면) 자동으로 이름을 제안하고,
 확인/수정 후 '적용'을 누르면 실제로 이름이 바뀝니다.
@@ -25,6 +25,11 @@ except ImportError:
     DND_AVAILABLE = False
 
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
+
+APP_NAME = "QuoteRenamer"
+APP_VERSION = "1.2.0"
+APP_RELEASE_DATE = "2026-08-18"
+APP_AUTHOR = "강무엽"
 
 
 def _known_folder(data1, data2, data3, data4, fallback_name: str) -> Path:
@@ -77,10 +82,51 @@ def get_documents_dir() -> Path:
     )
 
 
+def get_resource_path(name: str) -> Path:
+    """아이콘처럼 exe 안에 번들된(읽기 전용) 리소스 파일 경로.
+    company_aliases.json/tesseract처럼 사용자가 수정해야 하는 파일은
+    get_app_dir()을 쓰고, 이 함수는 절대 안 바뀌는 정적 자산에만 쓴다."""
+    if getattr(sys, "frozen", False):
+        base = Path(getattr(sys, "_MEIPASS", qr.get_app_dir()))
+    else:
+        base = Path(__file__).parent
+    return base / name
+
+
+def show_splash(root) -> tk.Toplevel:
+    splash = tk.Toplevel(root)
+    splash.overrideredirect(True)
+    splash.configure(bg="#4f46e5")
+    w, h = 420, 280
+    x = (splash.winfo_screenwidth() - w) // 2
+    y = (splash.winfo_screenheight() - h) // 2
+    splash.geometry(f"{w}x{h}+{x}+{y}")
+
+    try:
+        from PIL import Image, ImageTk
+        img = Image.open(get_resource_path("icon.ico")).resize((96, 96))
+        logo = ImageTk.PhotoImage(img)
+        logo_label = tk.Label(splash, image=logo, bg="#4f46e5")
+        logo_label.image = logo  # 참조 유지 (안 하면 GC로 사라짐)
+        logo_label.pack(pady=(32, 10))
+    except Exception:
+        pass
+
+    tk.Label(splash, text=APP_NAME, font=("Segoe UI", 20, "bold"),
+             fg="white", bg="#4f46e5").pack()
+    tk.Label(splash, text=f"v{APP_VERSION}  ·  {APP_RELEASE_DATE}",
+             font=("Malgun Gothic", 10), fg="#c7d2fe", bg="#4f46e5").pack(pady=(6, 0))
+    tk.Label(splash, text=f"제작: {APP_AUTHOR}",
+             font=("Malgun Gothic", 10), fg="#c7d2fe", bg="#4f46e5").pack(pady=(2, 0))
+
+    splash.update()
+    return splash
+
+
 class RenamerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("견적서/거래명세서/세금계산서 PDF 리네이머")
+        self.root.title(f"{APP_NAME} — 견적서/거래명세서/세금계산서 PDF 리네이머")
         self.root.geometry("900x560")
         self.aliases = qr.load_aliases()
         self.rows = {}  # tree iid -> {"src": Path}
@@ -295,7 +341,15 @@ class RenamerApp:
 
 def main():
     root = TkinterDnD.Tk() if DND_AVAILABLE else tk.Tk()
-    RenamerApp(root)
+    root.withdraw()
+    splash = show_splash(root)
+
+    def start_app():
+        splash.destroy()
+        RenamerApp(root)
+        root.deiconify()
+
+    root.after(1600, start_app)
     root.mainloop()
 
 
