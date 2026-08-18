@@ -27,9 +27,9 @@ except ImportError:
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
 
 APP_NAME = "QuoteRenamer"
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.2.1"
 APP_RELEASE_DATE = "2026-08-18"
-APP_AUTHOR = "강무엽"
+APP_AUTHOR = "Muki"
 
 
 def _known_folder(data1, data2, data3, data4, fallback_name: str) -> Path:
@@ -93,34 +93,85 @@ def get_resource_path(name: str) -> Path:
     return base / name
 
 
+def _splash_gradient(w: int, h: int):
+    """위->아래로 밝은 인디고에서 짙은 보라로 흐르는 배경 이미지."""
+    from PIL import Image, ImageDraw
+    top = (99, 91, 255)
+    bottom = (24, 22, 62)
+    img = Image.new("RGB", (w, h), top)
+    draw = ImageDraw.Draw(img)
+    for y in range(h):
+        t = y / max(h - 1, 1)
+        row = tuple(round(top[i] + (bottom[i] - top[i]) * t) for i in range(3))
+        draw.line([(0, y), (w, y)], fill=row)
+    return img
+
+
 def show_splash(root) -> tk.Toplevel:
+    w, h = 440, 300
     splash = tk.Toplevel(root)
     splash.overrideredirect(True)
-    splash.configure(bg="#4f46e5")
-    w, h = 420, 280
+    splash.attributes("-alpha", 0.0)
     x = (splash.winfo_screenwidth() - w) // 2
     y = (splash.winfo_screenheight() - h) // 2
     splash.geometry(f"{w}x{h}+{x}+{y}")
 
+    canvas = tk.Canvas(splash, width=w, height=h, highlightthickness=0, bd=0)
+    canvas.pack(fill="both", expand=True)
+    # PhotoImage 참조를 splash에 붙잡아둠 (splash 자신의 수명과 맞춰서, 나중에
+    # destroy 직전에 명시적으로 비워줄 수 있도록 - 그래야 Tk 위젯이 이미 죽은
+    # 뒤에 파이썬 GC가 뒤늦게 이미지를 정리하려다 나는 내부 오류를 피할 수 있음)
+    splash._image_refs = []
+
     try:
         from PIL import Image, ImageTk
-        img = Image.open(get_resource_path("icon.ico")).resize((96, 96))
-        logo = ImageTk.PhotoImage(img)
-        logo_label = tk.Label(splash, image=logo, bg="#4f46e5")
-        logo_label.image = logo  # 참조 유지 (안 하면 GC로 사라짐)
-        logo_label.pack(pady=(32, 10))
+        bg = ImageTk.PhotoImage(_splash_gradient(w, h))
+        canvas.create_image(0, 0, image=bg, anchor="nw")
+        splash._image_refs.append(bg)
+    except Exception:
+        canvas.configure(bg="#1e1b4b")
+
+    try:
+        from PIL import Image, ImageTk
+        logo_img = Image.open(get_resource_path("icon.ico")).resize((76, 76))
+        logo = ImageTk.PhotoImage(logo_img)
+        canvas.create_image(w // 2, 78, image=logo)
+        splash._image_refs.append(logo)
     except Exception:
         pass
 
-    tk.Label(splash, text=APP_NAME, font=("Segoe UI", 20, "bold"),
-             fg="white", bg="#4f46e5").pack()
-    tk.Label(splash, text=f"v{APP_VERSION}  ·  {APP_RELEASE_DATE}",
-             font=("Malgun Gothic", 10), fg="#c7d2fe", bg="#4f46e5").pack(pady=(6, 0))
-    tk.Label(splash, text=f"제작: {APP_AUTHOR}",
-             font=("Malgun Gothic", 10), fg="#c7d2fe", bg="#4f46e5").pack(pady=(2, 0))
+    canvas.create_text(w // 2, 144, text=APP_NAME, fill="white",
+                        font=("Segoe UI", 22, "bold"))
+    canvas.create_text(w // 2, 172, text=f"v{APP_VERSION}  ·  {APP_RELEASE_DATE}",
+                        fill="#c7d2fe", font=("Malgun Gothic", 9))
+
+    canvas.create_line(w // 2 - 54, 206, w // 2 + 54, 206, fill="#4338ca", width=1)
+
+    mid = w // 2
+    canvas.create_text(mid - 8, 234, text="Made by", fill="#a5b4fc",
+                        font=("Malgun Gothic", 9), anchor="e")
+    canvas.create_text(mid, 234, text=APP_AUTHOR, fill="#fbbf24",
+                        font=("Segoe UI", 15, "bold"), anchor="w")
 
     splash.update()
     return splash
+
+
+def _fade(win, start: float, end: float, duration_ms: int, on_done=None):
+    steps = max(int(duration_ms / 15), 1)
+    delta = (end - start) / steps
+
+    def step(i, alpha):
+        try:
+            win.attributes("-alpha", max(0.0, min(1.0, alpha)))
+        except tk.TclError:
+            return  # 창이 이미 닫힘
+        if i < steps:
+            win.after(15, lambda: step(i + 1, alpha + delta))
+        elif on_done:
+            on_done()
+
+    step(0, start)
 
 
 class RenamerApp:
@@ -345,11 +396,16 @@ def main():
     splash = show_splash(root)
 
     def start_app():
+        splash._image_refs.clear()
         splash.destroy()
         RenamerApp(root)
         root.deiconify()
 
-    root.after(1600, start_app)
+    def fade_out():
+        _fade(splash, 1.0, 0.0, 250, on_done=start_app)
+
+    # 스윽 나타나서(250ms) 잠깐 머물다(1000ms) 스윽 사라짐(250ms) - 총 1.5초
+    _fade(splash, 0.0, 1.0, 250, on_done=lambda: root.after(1000, fade_out))
     root.mainloop()
 
 
