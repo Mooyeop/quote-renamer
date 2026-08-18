@@ -15,7 +15,7 @@ if errorlevel 1 (
 
 echo.
 echo === exe 빌드 중 (몇 분 걸릴 수 있음) ===
-pyinstaller --onefile --windowed --name "견적서리네이머" --distpath dist --workpath build --specpath . app.py
+pyinstaller --onefile --windowed --icon icon.ico --name "견적서리네이머" --distpath dist --workpath build --specpath . app.py
 if errorlevel 1 (
     echo [오류] 빌드 실패
     pause
@@ -52,6 +52,6 @@ copy /Y "%TESS_DIR%\tessdata\kor.traineddata" release\tesseract\tessdata\ >nul
 
 echo.
 echo === 완료! ===
-echo release 폴더를 통째로 압축(zip)해서 나눠주면, 받는 사람은 압축만 풀고
-echo 견적서리네이머.exe 를 더블클릭하면 바로 실행됩니다 (Python/Tesseract 설치 불필요).
+echo release 폴더가 준비됐습니다.
+echo 이어서 build_installer.bat 을 실행하면 이 폴더로 설치 프로그램(exe)을 만듭니다.
 pause

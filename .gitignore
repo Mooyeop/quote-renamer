@@ -7,3 +7,4 @@ release/
 .claude/
 *.zip
 company_aliases.local.json
+installer_output/
