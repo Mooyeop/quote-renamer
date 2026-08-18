@@ -8,6 +8,7 @@
 > 하셔서 압축 풀고 `견적서리네이머.exe`를 더블클릭하세요. 이게 끝입니다.
 >
 > [이전 버전들은 여기서](https://github.com/Mooyeop/quote-renamer/releases) — 버전별로 계속 남아있으니 필요하면 옛날 버전도 받을 수 있습니다.
+> 버전별로 뭐가 바뀌었는지는 **[CHANGELOG.md](CHANGELOG.md)**에서 볼 수 있습니다.
 
 견적서 PDF를 읽어서 아래 규칙으로 파일명을 제안/변경합니다.
 
