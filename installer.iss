@@ -3,7 +3,7 @@
 ; 관리자 권한이 없는 사람도 설치할 수 있어야 해서).
 
 #define MyAppName "QuoteRenamer"
-#define MyAppVersion "1.2.2"
+#define MyAppVersion "1.2.3"
 #define MyAppExeName "QuoteRenamer.exe"
 
 [Setup]
@@ -21,6 +21,11 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+; 앱 자체적으로도 업데이트 전에 스스로 종료하지만(app.py 참고), 혹시
+; 타이밍이 안 맞아 exe가 아직 실행 중이어도 설치가 막히지 않도록 보험 삼아
+; 자동으로 앱을 닫고(CloseApplications), 설치 후 다시 띄워준다(RestartApplications).
+CloseApplications=yes
+RestartApplications=yes
 
 [Languages]
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
@@ -36,4 +41,6 @@ Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+; skipifsilent를 안 붙임 - 앱이 백그라운드에서 자동 업데이트를 걸 때도
+; (/SILENT로 조용히 설치) 설치 후 자동으로 다시 실행되도록 하기 위해서.
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall

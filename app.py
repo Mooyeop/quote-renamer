@@ -12,8 +12,14 @@ PDF를 창에 끌어다 놓으면(또는 선택하면) 자동으로 이름을 �
     (tkinterdnd2가 없어도 실행은 되지만, 그 경우 드래그&드롭 대신
      '파일 선택' 버튼만 쓸 수 있습니다.)
 """
+import json
+import os
 import shutil
+import subprocess
 import sys
+import tempfile
+import threading
+import urllib.request
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -27,9 +33,12 @@ except ImportError:
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
 
 APP_NAME = "QuoteRenamer"
-APP_VERSION = "1.2.2"
-APP_RELEASE_DATE = "2026-08-18"
+APP_VERSION = "1.2.3"
+APP_RELEASE_DATE = "2026-08-20"
 APP_AUTHOR = "Muki"
+
+UPDATE_API_URL = "https://api.github.com/repos/Mooyeop/quote-renamer/releases/latest"
+UPDATE_ASSET_NAME = "QuoteRenamer_Setup.exe"
 
 
 def _known_folder(data1, data2, data3, data4, fallback_name: str) -> Path:
@@ -172,6 +181,122 @@ def _fade(win, start: float, end: float, duration_ms: int, on_done=None):
             on_done()
 
     step(0, start)
+
+
+# ── 자동 업데이트 확인 ────────────────────────────────────────────
+def _parse_version(v: str) -> tuple:
+    v = v.strip().lstrip("vV")
+    parts = []
+    for p in v.split("."):
+        digits = "".join(ch for ch in p if ch.isdigit())
+        parts.append(int(digits) if digits else 0)
+    return tuple(parts)
+
+
+def check_for_update():
+    """GitHub에서 최신 릴리스를 확인한다. 반환: (버전, 릴리스노트, 다운로드url)
+    또는 새 버전이 없거나 확인에 실패하면 None. 회사 방화벽 등으로 접속이
+    안 되는 상황이 흔할 수 있어서, 실패해도 앱 실행에는 전혀 지장이 없도록
+    예외를 전부 조용히 삼킨다."""
+    try:
+        req = urllib.request.Request(
+            UPDATE_API_URL,
+            headers={"Accept": "application/vnd.github+json", "User-Agent": APP_NAME},
+        )
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        latest = data.get("tag_name", "")
+        if not latest or _parse_version(latest) <= _parse_version(APP_VERSION):
+            return None
+
+        asset_url = next(
+            (a.get("browser_download_url") for a in data.get("assets", [])
+             if a.get("name") == UPDATE_ASSET_NAME),
+            None,
+        )
+        if not asset_url:
+            return None
+        return latest, data.get("body", ""), asset_url
+    except Exception:
+        return None
+
+
+def start_update_check(root):
+    def worker():
+        result = check_for_update()
+        if result:
+            root.after(0, lambda: show_update_dialog(root, *result))
+
+    threading.Thread(target=worker, daemon=True).start()
+
+
+def show_update_dialog(root, new_version: str, notes: str, download_url: str):
+    win = tk.Toplevel(root)
+    win.title("업데이트 확인")
+    win.geometry("480x420")
+    win.transient(root)
+    win.grab_set()
+    win.resizable(False, False)
+
+    tk.Label(win, text=f"새 버전이 나왔습니다: {new_version}",
+             font=("Malgun Gothic", 12, "bold")).pack(pady=(18, 2))
+    tk.Label(win, text=f"현재 사용 중인 버전: v{APP_VERSION}",
+             fg="#64748b", font=("Malgun Gothic", 9)).pack()
+
+    notes_box = tk.Text(win, wrap="word", height=14, font=("Malgun Gothic", 9),
+                         relief="solid", borderwidth=1)
+    notes_box.insert("1.0", notes.strip() or "(릴리스 노트가 없습니다)")
+    notes_box.configure(state="disabled")
+    notes_box.pack(fill="both", expand=True, padx=16, pady=12)
+
+    status_var = tk.StringVar(value="")
+    tk.Label(win, textvariable=status_var, fg="#4f46e5",
+             font=("Malgun Gothic", 9)).pack()
+
+    btn_bar = tk.Frame(win)
+    btn_bar.pack(pady=(4, 16))
+
+    def set_status(msg):
+        root.after(0, lambda: status_var.set(msg))
+
+    def on_installer_launched():
+        def finish():
+            win.destroy()
+            root.after(600, lambda: os._exit(0))
+        root.after(0, finish)
+
+    def on_failed(msg):
+        def show_error():
+            status_var.set(f"업데이트 실패: {msg}")
+            update_btn.configure(state="normal")
+            later_btn.configure(state="normal")
+        root.after(0, show_error)
+
+    def download_and_launch():
+        try:
+            set_status("다운로드 중...")
+            tmp_path = Path(tempfile.gettempdir()) / UPDATE_ASSET_NAME
+            urllib.request.urlretrieve(download_url, tmp_path)
+            set_status("설치 프로그램을 실행합니다...")
+            subprocess.Popen(
+                [str(tmp_path), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"],
+                close_fds=True,
+            )
+            on_installer_launched()
+        except Exception as e:
+            on_failed(str(e))
+
+    def do_update():
+        update_btn.configure(state="disabled")
+        later_btn.configure(state="disabled")
+        threading.Thread(target=download_and_launch, daemon=True).start()
+
+    update_btn = tk.Button(btn_bar, text="지금 업데이트", bg="#4f46e5", fg="white",
+                            command=do_update)
+    update_btn.pack(side="left", padx=6)
+    later_btn = tk.Button(btn_bar, text="나중에", command=win.destroy)
+    later_btn.pack(side="left", padx=6)
 
 
 class RenamerApp:
@@ -400,6 +525,7 @@ def main():
         splash.destroy()
         RenamerApp(root)
         root.deiconify()
+        start_update_check(root)
 
     def fade_out():
         _fade(splash, 1.0, 0.0, 250, on_done=start_app)
