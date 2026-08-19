@@ -178,34 +178,87 @@ def extract_company(text: str, tables: list, aliases: dict) -> tuple[str, str]:
 
 # ── 날짜 추출 ─────────────────────────────────────────────────────
 DATE_PATTERNS = [
-    re.compile(r"(20\d{2})[-.](\d{1,2})[-.](\d{1,2})"),
+    re.compile(r"(20\d{2})[-./](\d{1,2})[-./](\d{1,2})"),  # 세금계산서 "작성일자" 등 2026/07/24 형식 포함
     re.compile(r"(20\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일"),
 ]
 DATE_LABELS = ["일자", "날짜", "DATE", "Date"]
+# "작성일자" 뒤에 "2026 07 20"처럼 공백/줄바꿈만으로 구분된 표 셀도 있어서,
+# 라벨 바로 뒤 구간에 한해서는 구분자를 가리지 않고 느슨하게 매칭한다.
+# (전체 문서에 이 패턴을 그대로 쓰면 다른 숫자들과 오매칭될 위험이 있어
+# 라벨 근처로 범위를 좁힘)
+LOOSE_DATE_RE = re.compile(r"(20\d{2})\D{1,3}(\d{1,2})\D{1,3}(\d{1,2})")
 
 
-def extract_date(text: str) -> tuple[str, str]:
+def _extract_date_near_label(text: str) -> str:
+    for label in DATE_LABELS:
+        idx = text.find(label)
+        if idx == -1:
+            continue
+        m = LOOSE_DATE_RE.search(text[idx:idx + 40])
+        if m:
+            y, mo, d = m.group(1), m.group(2), m.group(3)
+            return f"{int(y):04d}{int(mo):02d}{int(d):02d}"
+    return ""
+
+
+def _extract_date_from_table(tables: list) -> str:
+    """일부 거래명세서 양식은 '년/월/일'이 각각 별도 칸으로 나뉘어 있고
+    (예: 헤더 '년 월 일', 값 '26 7 24'), 연도도 2자리로만 표기됨.
+    이런 표는 본문 텍스트를 정규식으로 훑는 것만으로는 못 잡아서 표를
+    직접 뒤진다."""
+    for table in tables:
+        for r_idx, header in enumerate(table):
+            cols = {
+                normalize_cell(cell): i
+                for i, cell in enumerate(header)
+                if normalize_cell(cell) in ("년", "월", "일")
+            }
+            if not {"년", "월", "일"} <= cols.keys():
+                continue
+            for row in table[r_idx + 1:]:
+                y = normalize_cell(row[cols["년"]]) if cols["년"] < len(row) else ""
+                mo = normalize_cell(row[cols["월"]]) if cols["월"] < len(row) else ""
+                d = normalize_cell(row[cols["일"]]) if cols["일"] < len(row) else ""
+                if y.isdigit() and mo.isdigit() and d.isdigit():
+                    yi = int(y)
+                    if yi < 100:
+                        yi += 2000
+                    return f"{yi:04d}{int(mo):02d}{int(d):02d}"
+    return ""
+
+
+def extract_date(text: str, tables: list | None = None) -> tuple[str, str]:
     matches = []
     for pat in DATE_PATTERNS:
         for m in pat.finditer(text):
             matches.append(m)
-    if not matches:
-        return "", "⚠ 날짜 추출 실패 - 수동 확인 필요"
 
-    label_positions = []
-    for label in DATE_LABELS:
-        idx = text.find(label)
-        if idx != -1:
-            label_positions.append(idx)
+    if matches:
+        label_positions = []
+        for label in DATE_LABELS:
+            idx = text.find(label)
+            if idx != -1:
+                label_positions.append(idx)
 
-    def score(m):
-        if not label_positions:
-            return m.start()
-        return min(abs(m.start() - lp) for lp in label_positions)
+        def score(m):
+            if not label_positions:
+                return m.start()
+            return min(abs(m.start() - lp) for lp in label_positions)
 
-    best = min(matches, key=score)
-    y, mo, d = best.group(1), best.group(2), best.group(3)
-    return f"{int(y):04d}{int(mo):02d}{int(d):02d}", ""
+        best = min(matches, key=score)
+        y, mo, d = best.group(1), best.group(2), best.group(3)
+        return f"{int(y):04d}{int(mo):02d}{int(d):02d}", ""
+
+    if tables:
+        date = _extract_date_from_table(tables)
+        if date:
+            return date, ""
+
+    date = _extract_date_near_label(text)
+    if date:
+        return date, ""
+
+    return "", "⚠ 날짜 추출 실패 - 수동 확인 필요"
 
 
 # ── 항목(품목) 추출 ───────────────────────────────────────────────
@@ -320,7 +373,7 @@ def process_folder(folder: Path, out_csv: Path):
         text, tables = read_pdf(pdf_path)
         doc_type, warn0 = detect_doc_type(text)
         company, warn1 = extract_company(text, tables, aliases)
-        date, warn2 = extract_date(text)
+        date, warn2 = extract_date(text, tables)
         first_item, item_count, warn3 = extract_items(tables)
         proposed = build_filename(doc_type, company, date, first_item, item_count)
         warnings = "; ".join(w for w in [warn0, warn1, warn2, warn3] if w)

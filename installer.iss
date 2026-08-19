@@ -3,7 +3,7 @@
 ; 관리자 권한이 없는 사람도 설치할 수 있어야 해서).
 
 #define MyAppName "QuoteRenamer"
-#define MyAppVersion "1.2.1"
+#define MyAppVersion "1.2.2"
 #define MyAppExeName "QuoteRenamer.exe"
 
 [Setup]

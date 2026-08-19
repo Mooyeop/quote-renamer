@@ -27,7 +27,7 @@ except ImportError:
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
 
 APP_NAME = "QuoteRenamer"
-APP_VERSION = "1.2.1"
+APP_VERSION = "1.2.2"
 APP_RELEASE_DATE = "2026-08-18"
 APP_AUTHOR = "Muki"
 
@@ -291,7 +291,7 @@ class RenamerApp:
             text, tables = qr.read_pdf(path)
             doc_type, w0 = qr.detect_doc_type(text)
             company, w1 = qr.extract_company(text, tables, self.aliases)
-            date, w2 = qr.extract_date(text)
+            date, w2 = qr.extract_date(text, tables)
             first_item, item_count, w3 = qr.extract_items(tables)
             proposed = qr.build_filename(doc_type, company, date, first_item, item_count)
             warn = "; ".join(w for w in [w0, w1, w2, w3] if w)
