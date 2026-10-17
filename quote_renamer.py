@@ -58,8 +58,11 @@ def read_pdf(path: Path):
             if not text.strip():
                 # 스캔본(텍스트 레이어 없음) -> OCR
                 text = ocr_page(page)
+                tables = ocr_tables(page)
+            else:
+                tables = page.extract_tables() or []
             full_text_parts.append(text)
-            all_tables.extend(page.extract_tables() or [])
+            all_tables.extend(tables)
     return "\n".join(full_text_parts), all_tables
 
 
@@ -89,6 +92,52 @@ def _configure_tesseract_cmd(pytesseract) -> None:
         if candidate.exists():
             pytesseract.pytesseract.tesseract_cmd = str(candidate)
             return
+
+
+def ocr_tables(page) -> list:
+    """텍스트 없는 PDF에서도 검출된 표의 셀 위치를 이용해 값을 읽는다."""
+    try:
+        import pytesseract
+
+        _configure_tesseract_cmd(pytesseract)
+        image = page.to_image(resolution=300).original
+        sx = image.width / page.width
+        sy = image.height / page.height
+        tables = []
+        # 윤곽선 글자의 짧은 선분이 표 경계로 합쳐지지 않도록 제외한다.
+        edges = [e for e in page.edges if max(e["width"], e["height"]) > 15]
+        settings = {
+            "vertical_strategy": "explicit", "horizontal_strategy": "explicit",
+            "explicit_vertical_lines": [e for e in edges if e["orientation"] == "v"],
+            "explicit_horizontal_lines": [e for e in edges if e["orientation"] == "h"],
+            "snap_tolerance": 2,
+        }
+        if any(len(settings[key]) < 2 for key in
+               ("explicit_vertical_lines", "explicit_horizontal_lines")):
+            return []
+        for table in page.find_tables(settings):
+            rows = []
+            for row in table.rows:
+                values = []
+                for cell in row.cells:
+                    if cell is None:
+                        values.append(None)
+                        continue
+                    x0, top, x1, bottom = cell
+                    box = (round(x0 * sx) + 3, round(top * sy) + 3,
+                           round(x1 * sx) - 3, round(bottom * sy) - 3)
+                    if box[2] <= box[0] or box[3] <= box[1]:
+                        values.append("")
+                        continue
+                    values.append(pytesseract.image_to_string(
+                        image.crop(box), lang="kor+eng", config="--psm 6",
+                    ).strip())
+                rows.append(values)
+            tables.append(rows)
+        return tables
+    except Exception:
+        # OCR 실패 시 기존 경고 처리를 유지한다.
+        return []
 
 
 def ocr_page(page) -> str:
@@ -262,7 +311,7 @@ def extract_date(text: str, tables: list | None = None) -> tuple[str, str]:
 
 
 # ── 항목(품목) 추출 ───────────────────────────────────────────────
-ITEM_HEADER_RE = re.compile(r"품\s*명|규\s*격|PART")
+ITEM_HEADER_RE = re.compile(r"품\s*명|품\s*목|규\s*격|PART")
 NO_HEADER_RE = re.compile(r"^(No\.?|순번|NO)$")
 SUMMARY_KEYWORDS = ["합계", "공급가액", "부가세", "소계", "비고"]
 
