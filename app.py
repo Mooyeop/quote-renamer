@@ -322,6 +322,7 @@ class RenamerApp:
                 "드래그&드롭을 쓰려면 'pip install tkinterdnd2' 후 다시 실행하세요.\n"
                 "지금은 아래 '파일 선택' 버튼을 이용하세요."
             )
+        drop_text = f"{APP_NAME} · v{APP_VERSION}\n{drop_text}"
         self.drop_label = tk.Label(
             top, text=drop_text, bg="#eef2ff", fg="#334155",
             font=("Malgun Gothic", 11), cursor="hand2", justify="center",
