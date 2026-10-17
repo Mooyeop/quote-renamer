@@ -52,6 +52,10 @@ begin
   { v1.2.3/v1.2.4가 실행한 설치 프로그램도 새 앱을 독립적으로 시작해야 한다.
     이전 앱의 _MEI 임시 폴더는 종료 시 삭제되므로 재사용하지 않는다. }
   Result := SetEnvironmentVariable('PYINSTALLER_RESET_ENVIRONMENT', '1');
+  { 구버전 앱은 설치 프로그램을 시작한 뒤 600ms 후 종료한다.
+    RestartManager가 그 종료 과정에 끼어들지 않도록 먼저 기다린다. }
+  if Result and WizardSilent then
+    Sleep(2000);
   if not Result then
     MsgBox('업데이트 실행 환경을 초기화하지 못했습니다. 설치 파일을 직접 실행해 주세요.', mbError, MB_OK);
 end;
