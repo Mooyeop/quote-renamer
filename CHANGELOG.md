@@ -3,6 +3,11 @@
 이 프로젝트의 릴리스별 주요 변경사항을 기록합니다.
 [Keep a Changelog](https://keepachangelog.com/) 형식을 따릅니다 — 최신 버전이 위에 옵니다.
 
+## [Unreleased]
+
+### Added
+- 앱 상단 안내 영역에 현재 버전을 항상 표시합니다.
+
 ## [1.2.3] - 2026-08-20
 
 ### Added
