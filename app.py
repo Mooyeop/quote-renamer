@@ -33,7 +33,7 @@ except ImportError:
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
 
 APP_NAME = "QuoteRenamer"
-APP_VERSION = "1.2.4"
+APP_VERSION = "1.2.5"
 APP_RELEASE_DATE = "2026-10-17"
 APP_AUTHOR = "Muki"
 
@@ -282,6 +282,8 @@ def show_update_dialog(root, new_version: str, notes: str, download_url: str):
             subprocess.Popen(
                 [str(tmp_path), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"],
                 close_fds=True,
+                # 설치 후 새 앱은 종료되는 이전 앱의 임시 폴더를 재사용하면 안 된다.
+                env={**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"},
             )
             on_installer_launched()
         except Exception as e:
