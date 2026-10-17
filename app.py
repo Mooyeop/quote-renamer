@@ -33,8 +33,8 @@ except ImportError:
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
 
 APP_NAME = "QuoteRenamer"
-APP_VERSION = "1.2.3"
-APP_RELEASE_DATE = "2026-08-20"
+APP_VERSION = "1.2.4"
+APP_RELEASE_DATE = "2026-10-17"
 APP_AUTHOR = "Muki"
 
 UPDATE_API_URL = "https://api.github.com/repos/Mooyeop/quote-renamer/releases/latest"
