@@ -20,6 +20,7 @@ import sys
 import tempfile
 import threading
 import urllib.request
+import webbrowser
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -33,9 +34,11 @@ except ImportError:
 import quote_renamer as qr  # 이 파일과 같은 폴더에 있어야 합니다
 
 APP_NAME = "QuoteRenamer"
-APP_VERSION = "1.2.5"
-APP_RELEASE_DATE = "2026-10-17"
+APP_VERSION = "1.2.6"
+APP_RELEASE_DATE = "2026-11-16"
 APP_AUTHOR = "Muki"
+PROJECT_URL = "https://github.com/Mooyeop/quote-renamer"
+DOWNLOAD_URL = f"{PROJECT_URL}/releases/latest"
 
 UPDATE_API_URL = "https://api.github.com/repos/Mooyeop/quote-renamer/releases/latest"
 UPDATE_ASSET_NAME = "QuoteRenamer_Setup.exe"
@@ -308,6 +311,7 @@ class RenamerApp:
         self.root.geometry("900x560")
         self.aliases = qr.load_aliases()
         self.rows = {}  # tree iid -> {"src": Path}
+        self._info_window = None
 
         self._build_ui()
 
@@ -339,6 +343,8 @@ class RenamerApp:
 
         btn_bar = tk.Frame(self.root)
         btn_bar.pack(fill="x", padx=10)
+        tk.Button(btn_bar, text="Information · 앱 정보",
+                  command=self.show_information).pack(side="right")
         tk.Button(btn_bar, text="+ 파일 선택", command=self.browse_files).pack(side="left")
         tk.Button(btn_bar, text="+ 폴더 전체 추가", command=self.browse_folder).pack(side="left", padx=6)
         tk.Button(btn_bar, text="목록 지우기", command=self.clear_list).pack(side="left")
@@ -377,6 +383,66 @@ class RenamerApp:
                  "(견적서/거래명세서/세금계산서) 하위 폴더를 만들어 저장합니다.",
             fg="#64748b", font=("Malgun Gothic", 8),
         ).pack(fill="x", padx=10, pady=(0, 6))
+
+    def show_information(self):
+        if self._info_window is not None and self._info_window.winfo_exists():
+            self._info_window.lift()
+            self._info_window.focus_set()
+            return
+
+        win = tk.Toplevel(self.root)
+        self._info_window = win
+        win.title(f"Information · {APP_NAME}")
+        win.transient(self.root)
+        win.resizable(False, False)
+        win.bind("<Escape>", lambda event: win.destroy())
+
+        content = ttk.Frame(win, padding=24)
+        content.pack(fill="both", expand=True)
+        ttk.Label(content, text=APP_NAME,
+                  font=("Segoe UI", 20, "bold")).pack(anchor="w")
+        ttk.Label(content, text=f"v{APP_VERSION} · {APP_RELEASE_DATE} · Made by {APP_AUTHOR}",
+                  foreground="#64748b").pack(anchor="w", pady=(4, 16))
+        ttk.Label(content, text="견적서 · 거래명세서 · 세금계산서 PDF의\n파일명을 자동으로 정리하는 도구입니다.",
+                  font=("Malgun Gothic", 10)).pack(anchor="w")
+        ttk.Separator(content).pack(fill="x", pady=16)
+        ttk.Label(content, text="공유 및 다운로드",
+                  font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
+        ttk.Label(content, text="GitHub에서 사용법을 확인하고 최신 버전을 받을 수 있습니다.").pack(
+            anchor="w", pady=(6, 10))
+
+        link = ttk.Entry(content, width=54)
+        link.insert(0, PROJECT_URL)
+        link.configure(state="readonly")
+        link.pack(fill="x")
+
+        status = tk.StringVar(value="링크를 복사해 다른 사용자에게 공유해 보세요.")
+
+        def open_link(url):
+            try:
+                opened = webbrowser.open(url, new=2)
+            except Exception:
+                opened = False
+            if not opened:
+                status.set("브라우저를 열지 못했습니다. 링크를 복사해 접속해 주세요.")
+
+        def copy_link():
+            try:
+                win.clipboard_clear()
+                win.clipboard_append(PROJECT_URL)
+                status.set("GitHub 링크를 복사했습니다.")
+            except tk.TclError:
+                status.set("복사하지 못했습니다. 위 주소를 선택해 직접 복사해 주세요.")
+
+        actions = ttk.Frame(content)
+        actions.pack(fill="x", pady=(12, 8))
+        ttk.Button(actions, text="GitHub 열기", command=lambda: open_link(PROJECT_URL)).pack(side="left")
+        ttk.Button(actions, text="최신 버전 다운로드", command=lambda: open_link(DOWNLOAD_URL)).pack(
+            side="left", padx=8)
+        ttk.Button(actions, text="링크 복사", command=copy_link).pack(side="left")
+        ttk.Label(content, textvariable=status, foreground="#64748b",
+                  wraplength=440).pack(anchor="w", pady=(0, 16))
+        ttk.Button(content, text="닫기", command=win.destroy).pack(anchor="e")
 
     # ── 파일 추가 ────────────────────────────────────────────
     def browse_files(self):
